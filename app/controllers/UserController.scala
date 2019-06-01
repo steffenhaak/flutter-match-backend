@@ -112,14 +112,19 @@ class WebSocketActor(out: ActorRef, stateActor: ActorRef, userId: UUID)
     extends Actor
     with ActorLogging {
 
+  import context.dispatcher
   override def preStart(): Unit = {
     super.preStart()
     stateActor ! RegisterWebSocketClient(userId)
+    context.system.scheduler.schedule(30 seconds, 30 seconds, out, Json.obj("eventType" -> "PING"))
 
   }
 
   override def receive: Receive = {
-    case any => log.debug(s"Received: $any")
+
+    case js: JsValue =>
+      log.info(s"Received : $js")
+      out ! js
   }
 }
 object WebSocketActor {
